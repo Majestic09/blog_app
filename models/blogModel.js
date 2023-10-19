@@ -9,8 +9,8 @@ const blogSchema = mongoose.Schema({
     required: true,
   },
   author: {
-    type: String,
-    required: true,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "user",
   },
   isActive: {
     type: String,
