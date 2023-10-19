@@ -1,3 +1,4 @@
+const { unlinkSync } = require("fs");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const userModel = require("../models/userModel");
@@ -10,6 +11,7 @@ module.exports = {
         userEmail: req.body.userEmail,
       });
       if (isUserExist) {
+        req.file ? unlinkSync(req.file.path) : null;
         res.status(409).json({
           success: false,
           message: "User is already registered with this email",
@@ -20,7 +22,8 @@ module.exports = {
           req.body.userPassword,
           saltRounds
         );
-        console.log(userData.userPassword);
+        const filePath = `uploads/user/${req.file.filename}`;
+        userData.profilePic = filePath;
         const user = await userData.save();
         res.status(201).json({
           success: true,

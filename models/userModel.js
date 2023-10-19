@@ -27,6 +27,7 @@ const userSchema = mongoose.Schema(
     },
     userRole: {
       type: String,
+      default:"user",
       required: true,
     },
     profilePic: {
