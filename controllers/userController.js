@@ -2,6 +2,7 @@ const { unlinkSync } = require("fs");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const userModel = require("../models/userModel");
+const transporter = require("../services/emailService");
 
 module.exports = {
   createUser: async (req, res) => {
@@ -38,6 +39,7 @@ module.exports = {
       });
     }
   },
+
   userLogin: async (req, res) => {
     const userData = await userModel.findOne({ userEmail: req.body.userEmail });
     try {
@@ -65,6 +67,78 @@ module.exports = {
         res.status(403).json({
           success: false,
           message: "User are not reconised with email",
+        });
+      }
+    } catch (err) {
+      res.status(500).json({
+        success: false,
+        message: `Error occured ${err.message}`,
+      });
+    }
+  },
+
+  resetUserPassword: async (req, res) => {
+    const { userEmail } = req.body;
+    try {
+      const userData = await userModel.findOne({
+        userEmail: req.body.userEmail,
+      });
+      if (userData != null) {
+        const secret = process.env.SECRET_KEY + userData._id;
+        const token = jwt.sign({ userID: userData._id }, secret, {
+          expiresIn: "15m",
+        });
+        const link = `http//:localhost:4000/user/resetpassword/${userData._id}/${token}`;
+        let info = await transporter.sendMail({
+          form: "shoppingonline2109@gmail.com",
+          to: userEmail,
+          subject: "Link for reset user password",
+          html: `<a href=${link}>Click on link to reset password</a>`,
+        });
+        return res.status(200).json({
+          success: true,
+          message: "Email sent sucessfully",
+          userId: userData._id,
+          token: token,
+        });
+      } else {
+        res.status(403).json({
+          //forbidden
+          success: false,
+          message: "Please enter valid email",
+        });
+      }
+    } catch (err) {
+      res.status(500).json({
+        success: false,
+        message: `Error occured ${err.message}`,
+      });
+    }
+  },
+
+  resetPassword: async (req, res) => {
+    const { id, token } = req.params;
+    const { newPassword, confirmPassword } = req.body;
+    try {
+      const checkUser = await userModel.findById(id);
+      if (checkUser === null) {
+        res.status(403).json({
+          success: false,
+          message: "User is not authorised",
+        });
+      } else {
+        const secretkey = process.env.SECRET_KEY + checkUser._id;
+        jwt.verify(token, secretkey);
+        if (newPassword === confirmPassword) {
+          const saltRounds = await bcrypt.genSalt(8);
+          const bcryptPassword = await bcrypt.hash(confirmPassword, saltRounds);
+          await userModel.findByIdAndUpdate(checkUser._id, {
+            $set: { userPassword: bcryptPassword },
+          });
+        }
+        res.status(201).json({
+          success: true,
+          message: "Password updated successfully",
         });
       }
     } catch (err) {
