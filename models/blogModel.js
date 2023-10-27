@@ -12,6 +12,10 @@ const blogSchema = mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "user",
   },
+  blogImage: {
+    type: String,
+    required:true
+  },
   isActive: {
     type: String,
     default: true,
