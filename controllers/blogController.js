@@ -93,7 +93,7 @@ module.exports = {
       }
   
       if (blog.dislikes.includes(userId)) {
-        blog.dislikes.pull(userId);
+        blog.dislikes.filter((id) =>id!== userId);
       }
   
       // Add the user's ID to the 'likes' array
@@ -115,14 +115,12 @@ module.exports = {
     }
   },
   
-
   blogDislike: async (req, res) => {
     const userId = req.body.userId;
     const blogId = req.body.blogId;
   
     try {
       const blog = await blogModel.findById(blogId);
-  
       // Checking if the blog exists
       if (!blog) {
         return res.status(404).json({
@@ -162,5 +160,4 @@ module.exports = {
       });
     }
   },
-  
 };
