@@ -5,9 +5,10 @@ module.exports = {
   createBlog: async (req, res) => {
     try {
       const newBlog = new blogModel(req.body);
-      newBlog.title = req.body.title
-        .trim()
-        .replace(/^[a-z]/, (match) => match.toUpperCase());
+      // newBlog.title =
+      //   req.body.title.trim().charAt(0).toUpperCase() +
+      //   newBlog.title.slice(1).join("");
+      // .replace(/^[a-z]/, (match) => match.toUpperCase());
       const existingBlogPost = await blogModel.findOne({
         title: newBlog.title,
       });
@@ -69,64 +70,97 @@ module.exports = {
     }
   },
 
+
   blogLikes: async (req, res) => {
     const userId = req.body.userId;
     const blogId = req.body.blogId;
+  
     try {
-      const checkUser = await blogModel.findById(blogId);
-      if (checkUser.likes.includes(userId)) {
-        //dislike logic
-        const blogData = await blogModel.findOneAndUpdate(
-          { _id: blogId },
-          { $push: { dislikes: userId } },
-          { new: true }
-        );
-        const totalLikes = await blogData.dislikes.length;
-        const likedUser = await blogModel.findOne({ blogId: blogData._id });
-        if (likedUser) {
-          return res.status(404).json({
-            success: false,
-            message: "Blog not found",
-          });
-        } else {
-          res.status(200).json({
-            success: true,
-            likedUserId: userId,
-            likesCount: totalLikes,
-            message: "Dislike added successfully",
-          });
-        }
-        res.status(409).json({
+      const blog = await blogModel.findById(blogId);
+  
+      if (!blog) {
+        return res.status(404).json({
           success: false,
-          message: "Already disliked by the user",
+          message: "Blog not found",
         });
-      } else {
-        const blogData = await blogModel.findOneAndUpdate(
-          { _id: blogId },
-          { $push: { likes: userId } },
-          { new: true }
-        );
-        const totalLikes = await blogData.likes.length;
-        const likedUser = await blogModel.findOne({ blogId: blogData._id });
-        if (likedUser) {
-          return res.status(404).json({
-            success: false,
-            message: "Blog not found",
-          });
-        } else {
-          res.status(200).json({
-            success: true,
-            likedUserId: userId,
-            likesCount: totalLikes,
-            message: "Like added successfully",
-          });
-        }
       }
+  
+      if (blog.likes.includes(userId)) {
+        return res.status(409).json({
+          success: false,
+          message: "Already liked by the user",
+        });
+      }
+  
+      if (blog.dislikes.includes(userId)) {
+        blog.dislikes.pull(userId);
+      }
+  
+      // Add the user's ID to the 'likes' array
+      blog.likes.push(userId);
+      const updatedBlog = await blog.save();
+      const totalLikes = updatedBlog.likes.length;
+  
+      res.status(200).json({
+        success: true,
+        likedUserId: userId,
+        likesCount: totalLikes,
+        message: "Like added successfully",
+      });
     } catch (err) {
       res.status(500).json({
         success: false,
-        message: `Error occured ${err.message}`,
+        message: `Error occurred: ${err.message}`,
       });
     }
   },
+  
+
+  blogDislike: async (req, res) => {
+    const userId = req.body.userId;
+    const blogId = req.body.blogId;
+  
+    try {
+      const blog = await blogModel.findById(blogId);
+  
+      // Checking if the blog exists
+      if (!blog) {
+        return res.status(404).json({
+          success: false,
+          message: "Blog not found",
+        });
+      }
+  
+      // Checking if the user has already disliked the blog
+      if (blog.dislikes.includes(userId)) {
+        return res.status(409).json({
+          success: false,
+          message: "Already disliked by the user",
+        });
+      }
+  
+      // Removing the userId from the likes array if they had previously liked the blog
+      if (blog.likes.includes(userId)) {
+        blog.likes = blog.likes.filter((id) => id.toString() !== userId);
+      }
+  
+      // Adding the userId to the dislikes array
+      blog.dislikes.push(userId);
+  
+      const updatedBlog = await blog.save();
+      const dislikeCount = updatedBlog.dislikes.length;
+  
+      res.status(200).json({
+        success: true,
+        dislikesCount: dislikeCount,
+        message: "Dislike added successfully",
+      });
+    } catch (err) {
+      res.status(500).json({
+        success: false,
+        message: `Error occurred: ${err.message}`,
+      });
+    }
+  },
+  
 };

@@ -1,6 +1,6 @@
 const { createBlog } = require("./blogValschema");
 
-const blogPostValidation = async (req, res) => {
+const blogPostValidation = async (req, res,next) => {
   let isValid = await createBlog.validate(req.body, {
     abortEarly: false,
   });
