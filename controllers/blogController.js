@@ -2,19 +2,16 @@ const { unlinkSync } = require("fs");
 const blogModel = require("../models/blogModel");
 
 module.exports = {
-
   createBlog: async (req, res) => {
     try {
       const newBlog = new blogModel(req.body);
       newBlog.title = req.body.title
         .trim()
         .replace(/^[a-z]/, (match) => match.toUpperCase());
-      console.log(newBlog);
       const existingBlogPost = await blogModel.findOne({
         title: newBlog.title,
       });
       console.log(existingBlogPost);
-
       if (existingBlogPost) {
         req.file ? unlinkSync(req.file.path) : null;
         res.status(409).json({
@@ -65,11 +62,71 @@ module.exports = {
         searchDataList: searchDatalist,
       });
     } catch (err) {
-      res.status(500).josn({
+      res.status(500).json({
         success: false,
         message: `Error occured ${err.message}`,
       });
     }
   },
-  
+
+  blogLikes: async (req, res) => {
+    const userId = req.body.userId;
+    const blogId = req.body.blogId;
+    try {
+      const checkUser = await blogModel.findById(blogId);
+      if (checkUser.likes.includes(userId)) {
+        //dislike logic
+        const blogData = await blogModel.findOneAndUpdate(
+          { _id: blogId },
+          { $push: { dislikes: userId } },
+          { new: true }
+        );
+        const totalLikes = await blogData.dislikes.length;
+        const likedUser = await blogModel.findOne({ blogId: blogData._id });
+        if (likedUser) {
+          return res.status(404).json({
+            success: false,
+            message: "Blog not found",
+          });
+        } else {
+          res.status(200).json({
+            success: true,
+            likedUserId: userId,
+            likesCount: totalLikes,
+            message: "Dislike added successfully",
+          });
+        }
+        res.status(409).json({
+          success: false,
+          message: "Already disliked by the user",
+        });
+      } else {
+        const blogData = await blogModel.findOneAndUpdate(
+          { _id: blogId },
+          { $push: { likes: userId } },
+          { new: true }
+        );
+        const totalLikes = await blogData.likes.length;
+        const likedUser = await blogModel.findOne({ blogId: blogData._id });
+        if (likedUser) {
+          return res.status(404).json({
+            success: false,
+            message: "Blog not found",
+          });
+        } else {
+          res.status(200).json({
+            success: true,
+            likedUserId: userId,
+            likesCount: totalLikes,
+            message: "Like added successfully",
+          });
+        }
+      }
+    } catch (err) {
+      res.status(500).json({
+        success: false,
+        message: `Error occured ${err.message}`,
+      });
+    }
+  },
 };

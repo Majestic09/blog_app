@@ -14,8 +14,14 @@ const blogSchema = mongoose.Schema({
   },
   blogImage: {
     type: String,
-    required:true
+    required: true,
   },
+  likes: [
+    { type: mongoose.Schema.Types.ObjectId }
+  ],
+  dislikes: [
+    { type: mongoose.Schema.Types.ObjectId }
+  ],
   isActive: {
     type: String,
     default: true,

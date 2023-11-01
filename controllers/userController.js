@@ -6,8 +6,11 @@ const transporter = require("../services/emailService");
 
 module.exports = {
   createUser: async (req, res) => {
-    const userData = new userModel(req.body);
+    const newUser = new blogModel(req.body);
     try {
+      userData.userName = req.body.userName
+        .trim()
+        .replace(/^[a-z]/, (match) => match.toUpperCase());
       const isUserExist = await userModel.findOne({
         userEmail: req.body.userEmail,
       });
