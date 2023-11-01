@@ -77,7 +77,6 @@ module.exports = {
   
     try {
       const blog = await blogModel.findById(blogId);
-  
       if (!blog) {
         return res.status(404).json({
           success: false,
@@ -93,9 +92,9 @@ module.exports = {
       }
   
       if (blog.dislikes.includes(userId)) {
-        blog.dislikes.filter((id) =>id!== userId);
+        blog.dislikes.pull(userId)
       }
-  
+      
       // Add the user's ID to the 'likes' array
       blog.likes.push(userId);
       const updatedBlog = await blog.save();
@@ -150,6 +149,7 @@ module.exports = {
   
       res.status(200).json({
         success: true,
+        dislikedUserId: userId,
         dislikesCount: dislikeCount,
         message: "Dislike added successfully",
       });
@@ -160,4 +160,5 @@ module.exports = {
       });
     }
   },
+
 };

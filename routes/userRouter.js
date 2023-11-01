@@ -8,7 +8,7 @@ const {
   resetPassword
 } = require("../controllers/userController");
 const { registerUserValidation, loginUserValidation } = require("../validations/user/userDataval");
-
+const userAuthentication = require("../middlewares/userAuthentication")
 
 userRouter.post("/login",loginUserValidation, userLogin);
 userRouter.post("/resetpassword", resetUserPassword);

@@ -10,6 +10,7 @@ const {
   blogLikes,
   blogDislike,
 } = require("../controllers/blogController");
+const userAuthentication = require("../middlewares/userAuthentication");
 const blogRouter = express.Router();
 
 blogRouter.get("/list", blogList);
@@ -18,7 +19,7 @@ blogRouter.post("/search", searchBlog);
 blogRouter.post("/dislike/", blogDislike);
 blogRouter.post(
   "/create",
-  companyUploads.single("blogImage"),
+  companyUploads.single("blogImage"),userAuthentication,
   blogPostValidation,
   createBlog
 );
