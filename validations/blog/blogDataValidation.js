@@ -1,17 +1,17 @@
 const { createBlog } = require("./blogValschema");
 
-const blogPostValidation = async (req, res,next) => {
+const blogPostValidation = async (req, res, next) => {
   let isValid = await createBlog.validate(req.body, {
-    abortEarly: false,
+    aboutEarly: false,
   });
   if (isValid.error) {
-      res.status(403).json({
-          success: false,
-          message: isValid.error.details[0].message
+    res.status(403).json({
+      success: false,
+      message: isValid.error.details[0].message,
     });
   } else {
-      next()
+    next();
   }
 };
 
-module.exports = {blogPostValidation}
+module.exports = { blogPostValidation };

@@ -6,13 +6,13 @@ const transporter = require("../services/emailService");
 
 module.exports = {
   createUser: async (req, res) => {
-    const newUser = new blogModel(req.body);
+    const newUser = new userModel(req.body);
     try {
-      userData.userName = req.body.userName
+      newUser.userName = req.body.userName
         .trim()
         .replace(/^[a-z]/, (match) => match.toUpperCase());
       const isUserExist = await userModel.findOne({
-        userEmail: req.body.userEmail,
+        userEmail: newUser.userEmail,
       });
       if (isUserExist) {
         req.file ? unlinkSync(req.file.path) : null;
@@ -22,13 +22,13 @@ module.exports = {
         });
       } else {
         const saltRounds = await bcrypt.genSalt(10);
-        userData.userPassword = await bcrypt.hash(
+        newUser.userPassword = await bcrypt.hash(
           req.body.userPassword,
           saltRounds
         );
         const filePath = `uploads/user/${req.file.filename}`;
-        userData.profilePic = filePath;
-        const user = await userData.save();
+        newUser.profilePic = filePath;
+        const user = await newUser.save();
         res.status(201).json({
           success: true,
           message: "User registered sucessfully",
@@ -44,15 +44,15 @@ module.exports = {
   },
 
   userLogin: async (req, res) => {
-    const userData = await userModel.findOne({ userEmail: req.body.userEmail });
+    const newUser = await userModel.findOne({ userEmail: req.body.userEmail });
     try {
-      if (userData) {
+      if (newUser) {
         const hashPassword = await bcrypt.compare(
           req.body.userPassword,
-          userData.userPassword
+          newUser.userPassword
         );
-        if (userData && hashPassword) {
-          const token = jwt.sign({ userData }, process.env.SECRET_KEY, {
+        if (newUser && hashPassword) {
+          const token = jwt.sign({ newUser }, process.env.SECRET_KEY, {
             expiresIn: "1h",
           });
           res.status(200).json({
@@ -83,15 +83,15 @@ module.exports = {
   resetUserPassword: async (req, res) => {
     const { userEmail } = req.body;
     try {
-      const userData = await userModel.findOne({
+      const newUser = await userModel.findOne({
         userEmail: req.body.userEmail,
       });
-      if (userData != null) {
-        const secret = process.env.SECRET_KEY + userData._id;
-        const token = jwt.sign({ userID: userData._id }, secret, {
+      if (newUser != null) {
+        const secret = process.env.SECRET_KEY + newUser._id;
+        const token = jwt.sign({ userID: newUser._id }, secret, {
           expiresIn: "15m",
         });
-        const link = `http//:localhost:4000/user/resetpassword/${userData._id}/${token}`;
+        const link = `http//:localhost:4000/user/resetpassword/${newUser._id}/${token}`;
         let info = await transporter.sendMail({
           form: "shoppingonline2109@gmail.com",
           to: userEmail,
@@ -101,7 +101,7 @@ module.exports = {
         return res.status(200).json({
           success: true,
           message: "Email sent sucessfully",
-          userId: userData._id,
+          userId: newUser._id,
           token: token,
         });
       } else {

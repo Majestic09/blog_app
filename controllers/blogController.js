@@ -5,10 +5,9 @@ module.exports = {
   createBlog: async (req, res) => {
     try {
       const newBlog = new blogModel(req.body);
-      // newBlog.title =
-      //   req.body.title.trim().charAt(0).toUpperCase() +
-      //   newBlog.title.slice(1).join("");
-      // .replace(/^[a-z]/, (match) => match.toUpperCase());
+      newBlog.title = req.body.title.replace(/^[a-z]/, (match) =>
+        match.toUpperCase()
+      );
       const existingBlogPost = await blogModel.findOne({
         title: newBlog.title,
       });
@@ -70,11 +69,10 @@ module.exports = {
     }
   },
 
-
   blogLikes: async (req, res) => {
     const userId = req.body.userId;
     const blogId = req.body.blogId;
-  
+
     try {
       const blog = await blogModel.findById(blogId);
       if (!blog) {
@@ -83,23 +81,23 @@ module.exports = {
           message: "Blog not found",
         });
       }
-  
+
       if (blog.likes.includes(userId)) {
         return res.status(409).json({
           success: false,
           message: "Already liked by the user",
         });
       }
-  
+
       if (blog.dislikes.includes(userId)) {
-        blog.dislikes.pull(userId)
+        blog.dislikes.pull(userId);
       }
-      
+
       // Add the user's ID to the 'likes' array
       blog.likes.push(userId);
       const updatedBlog = await blog.save();
       const totalLikes = updatedBlog.likes.length;
-  
+
       res.status(200).json({
         success: true,
         likedUserId: userId,
@@ -113,11 +111,11 @@ module.exports = {
       });
     }
   },
-  
+
   blogDislike: async (req, res) => {
     const userId = req.body.userId;
     const blogId = req.body.blogId;
-  
+
     try {
       const blog = await blogModel.findById(blogId);
       // Checking if the blog exists
@@ -127,7 +125,7 @@ module.exports = {
           message: "Blog not found",
         });
       }
-  
+
       // Checking if the user has already disliked the blog
       if (blog.dislikes.includes(userId)) {
         return res.status(409).json({
@@ -135,18 +133,18 @@ module.exports = {
           message: "Already disliked by the user",
         });
       }
-  
+
       // Removing the userId from the likes array if they had previously liked the blog
       if (blog.likes.includes(userId)) {
         blog.likes = blog.likes.filter((id) => id.toString() !== userId);
       }
-  
+
       // Adding the userId to the dislikes array
       blog.dislikes.push(userId);
-  
+
       const updatedBlog = await blog.save();
       const dislikeCount = updatedBlog.dislikes.length;
-  
+
       res.status(200).json({
         success: true,
         dislikedUserId: userId,
@@ -161,4 +159,56 @@ module.exports = {
     }
   },
 
+  editBlog: async (req, res) => {
+    const blogId = req.params.id;
+    try {
+      const blogData = await blogModel.findByIdAndUpdate(blogId, req.body, {
+        new: true,
+        runValidator: true,
+      });
+      res.status(200).send({
+        success: true,
+        message: "Description updated successfully",
+        updatedData: blogData,
+      });
+    } catch (err) {
+      res.status(500).json({
+        success: false,
+        message: `Error occurred: ${err.message}`,
+      });
+    }
+  },
+
+  deleteBlog: async (req, res) => {
+    const blogId = req.params.id;
+    try {
+      if (blogId) {
+        const blogData = await blogModel.findByIdAndDelete(blogId);
+
+        if (blogData) {
+          res.status(204).json({
+            success: true,
+            message: "Blog deleted successfully",
+            deletedBlog: blogData,
+          });
+        } else {
+          res.status(404).json({
+            success: false,
+            message: "Blog not found",
+          });
+        }
+        
+      } else {
+        res.status(400).json({
+          success: false,
+          message:"Invalid request missing blog ID"
+        })
+      }
+    } catch (err) {
+      res.status(500).json({
+        success: false,
+        message: `Error occurd ${err.message}`,
+      });
+    }
+  },
 };
