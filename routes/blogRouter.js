@@ -11,6 +11,7 @@ const {
   blogDislike,
   editBlog,
   deleteBlog,
+  blogDetails,
 } = require("../controllers/blogController");
 const userAuthentication = require("../middlewares/userAuthentication");
 const blogRouter = express.Router();
@@ -21,6 +22,7 @@ blogRouter.post("/search", searchBlog);
 blogRouter.patch("/edit/:id", editBlog);
 blogRouter.post("/dislike/", blogDislike);
 blogRouter.delete("/delete/:id", deleteBlog);
+blogRouter.post("/details/:id/:user",blogDetails)
 blogRouter.post(
   "/create",
   blogUploads.single("blogImage"),

@@ -1,5 +1,6 @@
 const { unlinkSync } = require("fs");
 const blogModel = require("../models/blogModel");
+const commentModel = require("../models/commentModel");
 
 module.exports = {
   createBlog: async (req, res) => {
@@ -138,7 +139,7 @@ module.exports = {
       if (blog.likes.includes(userId)) {
         blog.likes = blog.likes.filter((id) => id.toString() !== userId);
       }
-      
+
       // Adding the userId to the dislikes array
       blog.dislikes.push(userId);
 
@@ -155,6 +156,29 @@ module.exports = {
       res.status(500).json({
         success: false,
         message: `Error occurred: ${err.message}`,
+      });
+    }
+  },
+
+  blogDetails: async (req, res) => {
+    const blogID = req.params.id;
+    const userID = req.params.user;
+    // console.log(blogID,userID)
+    try {
+      const blogData = await blogModel.findById(req.params.id);
+      const commentList = await commentModel
+        .find({ blogID: req.params.id })
+        .populate({ path: "userID", select: "userName" });
+      res.status(200).json({
+        success: true,
+        message: "Comment list fetched successfully",
+        blog: blogData,
+        comment: commentList,
+      });
+    } catch (err) {
+      res.status(500).json({
+        success: false,
+        message: `Comment not found ${err.message}`,
       });
     }
   },
