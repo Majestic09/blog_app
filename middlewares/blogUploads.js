@@ -20,9 +20,9 @@ const isImage = (req, file, callback) => {
   }
 };
 
-const companyUploads = multer({
+const blogUploads = multer({
   storage: imageConfig,
   fileFilter: isImage,
 });
 
-module.exports = companyUploads;
+module.exports = blogUploads;

@@ -138,7 +138,7 @@ module.exports = {
       if (blog.likes.includes(userId)) {
         blog.likes = blog.likes.filter((id) => id.toString() !== userId);
       }
-
+      
       // Adding the userId to the dislikes array
       blog.dislikes.push(userId);
 
@@ -184,7 +184,6 @@ module.exports = {
     try {
       if (blogId) {
         const blogData = await blogModel.findByIdAndDelete(blogId);
-
         if (blogData) {
           res.status(204).json({
             success: true,
@@ -197,12 +196,11 @@ module.exports = {
             message: "Blog not found",
           });
         }
-        
       } else {
         res.status(400).json({
           success: false,
-          message:"Invalid request missing blog ID"
-        })
+          message: "Invalid request missing blog ID",
+        });
       }
     } catch (err) {
       res.status(500).json({
